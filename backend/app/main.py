@@ -173,6 +173,10 @@ class SistemaOperativo:
 
 app = FastAPI()
 
+@app.get("/")
+async def status():
+    return {"status": "online"}
+
 @app.post("/simular-procesos")
 async def simular_procesos(task_list: TaskList):
     sistema_operativo = SistemaOperativo()
