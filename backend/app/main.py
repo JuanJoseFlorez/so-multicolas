@@ -13,6 +13,7 @@ class Task(BaseModel):
     prioridad: int
     ncpu_quantum: int
     entradas_salidas: List[EntradaSalida]
+    quantum_restantes_prioridad: int = 0  # Nuevo atributo
 
 class TaskList(BaseModel):
     tasks: List[Task]
@@ -24,6 +25,7 @@ class ProcesoSimulado(BaseModel):
     quantum_usado: int
     estado: str
     prioridad: int
+    antigua_prioridad: Optional[int]  # Nuevo atributo
 
 def calcular_quantum_por_prioridad(prioridad):
     """
@@ -85,7 +87,9 @@ class SistemaOperativo:
             
             # Calcular quantum disponible para esta prioridad
             quantum_disponible = calcular_quantum_por_prioridad(tarea_actual.prioridad)
-            
+            if tarea_actual.quantum_restantes_prioridad > 0:
+                quantum_disponible = tarea_actual.quantum_restantes_prioridad
+
             # Calcular quantum a usar
             quantum_maximo = min(tarea_actual.ncpu_quantum, quantum_disponible)
             
@@ -100,42 +104,49 @@ class SistemaOperativo:
             
             # Usar momento de interrupción si existe
             quantum_usado = (momento_interrupcion - self.tiempo_global) if momento_interrupcion else quantum_maximo
+            if momento_interrupcion:
+                quantum_restante = quantum_disponible - quantum_usado
+                tarea_actual.quantum_restantes_prioridad = quantum_restante
+                # Registrar proceso
+                proceso = ProcesoSimulado(
+                    id_tarea=tarea_actual.id,
+                    tiempo_inicio=self.tiempo_global,
+                    tiempo_fin=self.tiempo_global + quantum_usado,
+                    quantum_usado=quantum_usado,
+                    estado=f"Se detiene por otro proceso, gasto {quantum_usado} quantum",
+                    prioridad=tarea_actual.prioridad,
+                    antigua_prioridad=tarea_actual.prioridad
+                )
+            else:
+                tarea_actual.quantum_restantes_prioridad = 0
+                # Registrar proceso
+                proceso = ProcesoSimulado(
+                    id_tarea=tarea_actual.id,
+                    tiempo_inicio=self.tiempo_global,
+                    tiempo_fin=self.tiempo_global + quantum_usado,
+                    quantum_usado=quantum_usado,
+                    estado="procesando",
+                    prioridad=self._calcular_nueva_prioridad(tarea_actual.prioridad),
+                    antigua_prioridad=tarea_actual.prioridad
+                )
             
-            # Registrar proceso
-            proceso = ProcesoSimulado(
-                id_tarea=tarea_actual.id,
-                tiempo_inicio=self.tiempo_global,
-                tiempo_fin=self.tiempo_global + quantum_usado,
-                quantum_usado=quantum_usado,
-                estado="procesando",
-                prioridad=self._calcular_nueva_prioridad(tarea_actual.prioridad)
-            )
             self.procesos_simulados.append(proceso)
-            
             # Actualizar tiempo y quantum restante
             self.tiempo_global += quantum_usado
             tarea_actual.ncpu_quantum -= quantum_usado
             
-            # Manejar entradas/salidas si existen
-            if tarea_actual.entradas_salidas:
+            # Manejar entradas/salidas solo si el proceso gastó todos sus quantum disponibles
+            if tarea_actual.entradas_salidas and tarea_actual.ncpu_quantum <= 0:
                 entrada_salida = tarea_actual.entradas_salidas[0]
-                if entrada_salida.ncpu_quantum <= quantum_usado:
-                    # Registrar tiempo de entrada/salida
-                    proceso_io = ProcesoSimulado(
-                        id_tarea=tarea_actual.id,
-                        tiempo_inicio=self.tiempo_global,
-                        tiempo_fin=self.tiempo_global + entrada_salida.tiempo_gasta_entradas_salidas,
-                        quantum_usado=entrada_salida.tiempo_gasta_entradas_salidas,
-                        estado="entrada/salida",
-                        prioridad=proceso.prioridad
-                    )
-                    self.procesos_simulados.append(proceso_io)
-                    
-                    # Actualizar tiempo global
-                    self.tiempo_global += entrada_salida.tiempo_gasta_entradas_salidas
-                    
-                    # Remover entrada/salida procesada
-                    tarea_actual.entradas_salidas.pop(0)
+                # Calcular nuevo tiempo de llegada
+                nuevo_tiempo_llegada = proceso.tiempo_fin + entrada_salida.tiempo_gasta_entradas_salidas
+                
+                # Actualizar tarea con nuevos valores
+                tarea_actual.tiempo_llegada_quantum = nuevo_tiempo_llegada
+                tarea_actual.ncpu_quantum = entrada_salida.ncpu_quantum
+                
+                # Remover entrada/salida procesada
+                tarea_actual.entradas_salidas.pop(0)
             
             # Actualizar prioridad
             tarea_actual.prioridad = proceso.prioridad
@@ -167,7 +178,8 @@ async def simular_procesos(task_list: TaskList):
                 "tiempo_fin": p.tiempo_fin,
                 "quantum_usado": p.quantum_usado,
                 "estado": p.estado,
-                "prioridad": p.prioridad
+                "prioridad": p.prioridad,
+                "antigua_prioridad": p.antigua_prioridad  # Agregando el campo antigua_prioridad
             } for p in procesos
         ]
     }
