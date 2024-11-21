@@ -113,19 +113,28 @@ class SistemaOperativo:
                     tiempo_inicio=self.tiempo_global,
                     tiempo_fin=self.tiempo_global + quantum_usado,
                     quantum_usado=quantum_usado,
-                    estado=f"Se detiene por otro proceso, gasto {quantum_usado} quantum",
+                    estado=f"Pausado por prioridad, gasto {quantum_usado} quantum",
                     prioridad=tarea_actual.prioridad,
                     antigua_prioridad=tarea_actual.prioridad
                 )
             else:
                 tarea_actual.quantum_restantes_prioridad = 0
+                estado = ""
+                if not any(p.id_tarea == tarea_actual.id for p in self.procesos_simulados):
+                    estado = "Nuevo"
+                elif tarea_actual.entradas_salidas and tarea_actual.ncpu_quantum - quantum_usado <= 0:
+                    estado = "Bloqueado"
+                elif tarea_actual.ncpu_quantum - quantum_usado <= 0:
+                    estado = "Terminado"
+                else:
+                    estado = "Procesando"
                 # Registrar proceso
                 proceso = ProcesoSimulado(
                     id_tarea=tarea_actual.id,
                     tiempo_inicio=self.tiempo_global,
                     tiempo_fin=self.tiempo_global + quantum_usado,
                     quantum_usado=quantum_usado,
-                    estado="procesando",
+                    estado=estado,
                     prioridad=self._calcular_nueva_prioridad(tarea_actual.prioridad),
                     antigua_prioridad=tarea_actual.prioridad
                 )
