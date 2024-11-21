@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Optional
+import math
 
 class EntradaSalida(BaseModel):
     tiempo_gasta_entradas_salidas: int
@@ -24,18 +25,19 @@ class ProcesoSimulado(BaseModel):
     estado: str
     prioridad: int
 
-# Diccionario de quantum por prioridad
-QUANTUM_POR_PRIORIDAD = {
-    1: 1,   # prioridad 0
-    2: 2,   # prioridad 1
-    4: 4,   # prioridad 2
-    8: 8,   # prioridad 3
-    16: 16, # prioridad 4
-    32: 32, # prioridad 5
-    64: 64, # prioridad 6
-    128: 128, # prioridad 7
-    256: 256  # prioridad 8
-}
+def calcular_quantum_por_prioridad(prioridad):
+    """
+    Calcula los quantum disponibles para cada prioridad
+    Prioridad 1 = 1 quantum
+    Prioridad 2 = 2 quantum
+    Prioridad 3 = 4 quantum
+    Prioridad 4 = 8 quantum
+    y así sucesivamente
+    """
+    if prioridad == 0:
+        return 1
+    else:
+        return 2 ** prioridad
 
 class SistemaOperativo:
     def __init__(self):
@@ -81,8 +83,8 @@ class SistemaOperativo:
                 self.tiempo_global += 1
                 continue
             
-            # Obtener quantum disponible para esta prioridad
-            quantum_disponible = QUANTUM_POR_PRIORIDAD.get(2 ** (tarea_actual.prioridad - 1), 0)
+            # Calcular quantum disponible para esta prioridad
+            quantum_disponible = calcular_quantum_por_prioridad(tarea_actual.prioridad)
             
             # Calcular quantum a usar
             quantum_maximo = min(tarea_actual.ncpu_quantum, quantum_disponible)
