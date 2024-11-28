@@ -1,20 +1,21 @@
-import React, { useState } from 'react'
-import ProcessForm from './components/ProcessForm'
-import ProcessVisualization from './components/ProcessVisualization'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Home from './components/Home';
+import InformationPage from './components/InformationPage';
 
 function App() {
-  const [processData, setProcessData] = useState(null);
-
-  const handleProcessSubmit = (data) => {
-    setProcessData(data);
-  };
-
   return (
-    <div className="App container mx-auto px-4 py-8">
-      <ProcessForm onSubmit={handleProcessSubmit} />
-      {processData && <ProcessVisualization initialData={processData} />}
-    </div>
-  )
+    <Router>
+      <div className="App">
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/informacion" element={<InformationPage />} />
+        </Routes>
+      </div>
+    </Router>
+  );
 }
 
-export default App
+export default App;

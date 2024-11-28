@@ -8,6 +8,8 @@ services:
       - "8000:8000"
     volumes:
       - ./backend/app:/app
+    networks:
+      - app-network
     depends_on:
       - frontend
 
@@ -19,5 +21,11 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    networks:
+      - app-network
     stdin_open: true
     tty: true
+
+networks:
+  app-network:
+    driver: bridge
