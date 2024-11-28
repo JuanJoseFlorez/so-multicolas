@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import ProcessForm from './components/ProcessForm'
-import ProcessVisualization from './components/ProcessVisualization'
+import ProcessForm from './ProcessForm'
+import ProcessVisualization from './ProcessVisualization'
 
-function App() {
+function Home() {
   const [processData, setProcessData] = useState(null);
 
   const handleProcessSubmit = (data) => {
@@ -10,11 +10,11 @@ function App() {
   };
 
   return (
-    <div className="App container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
       <ProcessForm onSubmit={handleProcessSubmit} />
       {processData && <ProcessVisualization initialData={processData} />}
     </div>
   )
 }
 
-export default App
+export default Home;
