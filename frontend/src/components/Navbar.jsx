@@ -11,13 +11,13 @@ const Navbar = () => {
         <div className="space-x-4">
           <Link 
             to="/" 
-            className="hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
+            className="text-white hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
           >
             Inicio
           </Link>
           <Link 
             to="/informacion" 
-            className="hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
+            className="text-white hover:bg-blue-700 px-3 py-2 rounded transition duration-300"
           >
             Información
           </Link>

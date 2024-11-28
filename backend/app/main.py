@@ -114,7 +114,8 @@ class SistemaOperativo:
                     tiempo_inicio=self.tiempo_global,
                     tiempo_fin=self.tiempo_global + quantum_usado,
                     quantum_usado=quantum_usado,
-                    estado=f"Pausado por prioridad, gasto {quantum_usado} quantum",
+                    # estado=f"Pausado por prioridad, gasto {quantum_usado} quantum",
+                    estado=f"Bloqueado, Prioridad",
                     prioridad=tarea_actual.prioridad,
                     antigua_prioridad=tarea_actual.prioridad
                 )
@@ -124,7 +125,7 @@ class SistemaOperativo:
                 if not any(p.id_tarea == tarea_actual.id for p in self.procesos_simulados):
                     estado = "Nuevo"
                 elif tarea_actual.entradas_salidas and tarea_actual.ncpu_quantum - quantum_usado <= 0:
-                    estado = "Bloqueado"
+                    estado = "Bloqueado, E/S"
                 elif tarea_actual.ncpu_quantum - quantum_usado <= 0:
                     estado = "Terminado"
                 else:

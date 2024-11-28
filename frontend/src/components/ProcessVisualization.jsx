@@ -4,7 +4,7 @@ const ProcessCard = ({ process }) => {
   return (
     <div className="bg-white shadow-md rounded-lg p-4 m-2 w-64 relative border-2 border-gray-200">
       {/* Quantum usado en la parte superior centrada */}
-      <div className="text-center font-bold text-xl mb-4 text-gray-600">
+      <div className="text-left font-bold text-xl mb-4 text-gray-600">
         {process.quantum_usado}
       </div>
 
